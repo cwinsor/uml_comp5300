@@ -57,15 +57,15 @@ def softmax_loss_naive(W, X, y, reg):
     # is in "y" (it's the only one that will contribute).
 
     # sanity checking...
-    print("X.shape ", X.shape)
-    print("y.shape ", y.shape)
-    print("W.shape ", W.shape)
+    # print("X.shape ", X.shape)
+    # print("y.shape ", y.shape)
+    # print("W.shape ", W.shape)
     assert X.shape[1] == W.shape[0], "ERROR: W and X need to have same dimension D"
     assert X.shape[0] == y.shape[0], "ERROR: X and Y need to have same dimension C"
 
     N, D = X.shape
     C = W.shape[1]
-    print("N={} D={} C={}".format(N,D,C))
+    # print("N={} D={} C={}".format(N,D,C))
 
     # compute z=(X*W)
     z = np.zeros([N,C])
@@ -91,12 +91,6 @@ def softmax_loss_naive(W, X, y, reg):
     for n in range(N):
        pr_y_predicted[n:] = exp_z[n,:] / sum(exp_z[n])
 
-    # # zona prints
-    # print(z)
-    # print(exp_z)
-    # print(sum_exp_z)
-    # print(pr_y_predicted)
-
     # now the cross-entropy...
     h_n = np.zeros([N])
     for n in range(N):
@@ -104,10 +98,6 @@ def softmax_loss_naive(W, X, y, reg):
       # it makes no sense to take log, so we conclude that it must be the first term...
       y_given_class = y[n]
       # log(2 = 1) i.e. the first term == 1
-      # zona prints...
-      # print("--- n={} ---".format(n))
-      # print("  y_given_class {}".format(y_given_class))
-      # print("  pr_y_predicted {}".format(pr_y_predicted[n,y_given_class]))
       h_n[n] = 1. * np.log(pr_y_predicted[n,y_given_class])
 
     # average the losses across the batch
@@ -118,8 +108,6 @@ def softmax_loss_naive(W, X, y, reg):
     #
     grad_out = 1.  # is Nx1 but numpy will broadcast as needed
     sum_exp_z_bcast = np.tile(sum_exp_z,(C,1)).T
-    print("zona 1 ", sum_exp_z.shape)
-    print("zona 1 ", sum_exp_z_bcast.shape)
 
     # the divide is:  out = exp_z / sum_exp_z
     # grad backward through that 
@@ -128,11 +116,9 @@ def softmax_loss_naive(W, X, y, reg):
     # df_dy = -x/y^-2
     # numerator:
     grad_numerator = grad_out / sum_exp_z_bcast  # should be NxC
-    print("zona 2 ", grad_numerator.shape)
     
     # denominator:
     grad_denominator = grad_out * -1. * exp_z / sum_exp_z_bcast / sum_exp_z_bcast
-    print("zona 3 ", grad_denominator.shape)
 
     # grad backward through the "broadcast" of exp_z into numerator and denominator terms
     # for a broadcast the backprop grad is the sum
@@ -174,15 +160,15 @@ def softmax_loss_vectorized(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     # sanity checking...
-    print("X.shape ", X.shape)
-    print("y.shape ", y.shape)
-    print("W.shape ", W.shape)
+    # print("X.shape ", X.shape)
+    # print("y.shape ", y.shape)
+    # print("W.shape ", W.shape)
     assert X.shape[1] == W.shape[0], "ERROR: W and X need to have same dimension D"
     assert X.shape[0] == y.shape[0], "ERROR: X and Y need to have same dimension C"
 
     N, D = X.shape
     C = W.shape[1]
-    print("N={} D={} C={}".format(N,D,C))
+    # print("N={} D={} C={}".format(N,D,C))
 
     z = np.dot(X,W)
     exp_z = np.exp(z)
@@ -191,8 +177,7 @@ def softmax_loss_vectorized(W, X, y, reg):
     numerator = exp_z
 
     # denominator
-    sum_exp_z = np.sum(exp_z, axis=0)
-    assert sum_exp_z.size == 500, "zona self check... DELETE ME"
+    sum_exp_z = np.sum(exp_z, axis=1)
     denominator = np.tile(sum_exp_z,(C,1)).T
 
     pr_y_predicted = numerator / denominator
@@ -203,11 +188,11 @@ def softmax_loss_vectorized(W, X, y, reg):
     y_one_hot = np.eye(n_values)[y]
 
     # cross entropy is sum( pr(y) * log(pr(y_predicted)) )
-    cross_entropy_samples = np.sum( y_one_hot * np.log(pr_y_predicted) )
-    loss = sum(cross_entropy_samples)
+    cross_entropy_samples = np.sum( y_one_hot * np.log(pr_y_predicted), axis=1)
+    loss = -np.mean(cross_entropy_samples)
 
     # zona - punt on the dW
-    dW = np.random.rand(N,D)
+    dW = np.random.rand(D,C)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
