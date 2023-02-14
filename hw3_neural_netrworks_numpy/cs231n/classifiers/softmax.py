@@ -34,6 +34,7 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
+    # --- SOFTMAX LOSS (for gradient see below) ---
     # given X (NxD), W (DxC)...
     # 
     # first step is to compute softmax from X, W.
@@ -97,7 +98,6 @@ def softmax_loss_naive(W, X, y, reg):
     # print(pr_y_predicted)
 
     # now the cross-entropy...
-    # ZONA CONFIRM WHICH IS FIRST...
     h_n = np.zeros([N])
     for n in range(N):
       # y (given) is a specific class - that is - probability is 0 or 1
@@ -113,9 +113,43 @@ def softmax_loss_naive(W, X, y, reg):
     # average the losses across the batch
     loss = -np.mean(h_n)
 
-    # ZONA
-    dW = 0
+    # --------- GRADIENT -------
+    # we are working backward from the output of the "softmax" part of the network...
+    #
+    grad_out = 1.  # is Nx1 but numpy will broadcast as needed
+    sum_exp_z_bcast = np.tile(sum_exp_z,(C,1)).T
+    print("zona 1 ", sum_exp_z.shape)
+    print("zona 1 ", sum_exp_z_bcast.shape)
 
+    # the divide is:  out = exp_z / sum_exp_z
+    # grad backward through that 
+    # for f(x,y) == x/y == x * y^-1
+    # df_dx = 1/y
+    # df_dy = -x/y^-2
+    # numerator:
+    grad_numerator = grad_out / sum_exp_z_bcast  # should be NxC
+    print("zona 2 ", grad_numerator.shape)
+    
+    # denominator:
+    grad_denominator = grad_out * -1. * exp_z / sum_exp_z_bcast / sum_exp_z_bcast
+    print("zona 3 ", grad_denominator.shape)
+
+    # grad backward through the "broadcast" of exp_z into numerator and denominator terms
+    # for a broadcast the backprop grad is the sum
+    # reference https://www.youtube.com/watch?v=d14TUNcbn1k&t=138s at 34:14 minutes)
+    grad_exp_z = grad_numerator + grad_denominator  # all should be NxC
+
+    # grad backward through the exp_z = exp(z)
+    # grad here is exp(z)
+    grad_z = grad_exp_z  # should be NxC
+
+    # grad back the equation:  z = x * w
+    # grad of multiply is...
+    # given c = a*b gradient is: grad_a = b * grad_c
+    grad_x = np.dot(W, z.T) # should be NxD... (unused)
+    grad_w = np.dot(X.T, z) # should be DxC... <----what we want
+
+    dW = grad_w
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -139,8 +173,41 @@ def softmax_loss_vectorized(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    # sanity checking...
+    print("X.shape ", X.shape)
+    print("y.shape ", y.shape)
+    print("W.shape ", W.shape)
+    assert X.shape[1] == W.shape[0], "ERROR: W and X need to have same dimension D"
+    assert X.shape[0] == y.shape[0], "ERROR: X and Y need to have same dimension C"
 
-    pass
+    N, D = X.shape
+    C = W.shape[1]
+    print("N={} D={} C={}".format(N,D,C))
+
+    z = np.dot(X,W)
+    exp_z = np.exp(z)
+
+    # numerator
+    numerator = exp_z
+
+    # denominator
+    sum_exp_z = np.sum(exp_z, axis=0)
+    assert sum_exp_z.size == 500, "zona self check... DELETE ME"
+    denominator = np.tile(sum_exp_z,(C,1)).T
+
+    pr_y_predicted = numerator / denominator
+
+    # the cross entropy...
+    # convert y to 1-hot...
+    n_values = np.max(y) + 1
+    y_one_hot = np.eye(n_values)[y]
+
+    # cross entropy is sum( pr(y) * log(pr(y_predicted)) )
+    cross_entropy_samples = np.sum( y_one_hot * np.log(pr_y_predicted) )
+    loss = sum(cross_entropy_samples)
+
+    # zona - punt on the dW
+    dW = np.random.rand(N,D)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
