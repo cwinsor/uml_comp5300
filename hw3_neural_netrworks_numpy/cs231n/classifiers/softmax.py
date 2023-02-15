@@ -69,13 +69,21 @@ def softmax_loss_naive(W, X, y, reg):
 
     # print("zona - X\n", X)
     # print("zona - W\n", W)
-    
+
     # compute z=(X*W)
     z = np.zeros([N,C])
     for n in range(N):
       for d in range(D):
         for c in range(C):
            z[n,c] += X[n,d] * W[d,c]
+
+    # print("zona - z\n", z)
+
+    # numerically stabilize before taking exp(), as recommended at
+    # https://e2eml.school/softmax.html and
+    # https://stackoverflow.com/questions/40575841/numpy-calculate-the-derivative-of-the-softmax-function
+    z = z - z.max()
+    # really we should be doing this by row (sample)...
 
     # print("zona - z\n", z)
 
@@ -102,6 +110,7 @@ def softmax_loss_naive(W, X, y, reg):
     exp_z_denom_sum_bcast = np.tile(exp_z_denom_sum,(C,1)).T
 
     # print("zona - exp_z_numerator\n", exp_z_numerator)
+    # print("zona - exp_z_denom_sum\n", exp_z_denom_sum)
     # print("zona - exp_z_denom_sum_bcast\n", exp_z_denom_sum_bcast)
 
     # compute the softmax pr_y_predicted
@@ -141,7 +150,9 @@ def softmax_loss_naive(W, X, y, reg):
     # print("zona - grad_exp_z_numerator\n", grad_exp_z_numerator)
     
     # denominator:
-    grad_exp_z_denom_sum_bcast = grad_out * -1. * exp_z_numerator / exp_z_denom_sum_bcast / exp_z_denom_sum_bcast
+    grad_exp_z_denom_sum_bcast = grad_out * -1. * exp_z_numerator / exp_z_denom_sum_bcast
+    # grad_exp_z_denom_sum_bcast = grad_out * -1. * exp_z_numerator / exp_z_denom_sum_bcast / exp_z_denom_sum_bcast
+
     # print("zona - grad_exp_z_denom_sum_bcast\n", grad_exp_z_denom_sum_bcast)
 
     # grad backward through the broadcast in the denominator
@@ -229,8 +240,21 @@ def softmax_loss_vectorized(W, X, y, reg):
     cross_entropy_samples = np.sum( y_one_hot * np.log(pr_y_predicted), axis=1)
     loss = -np.mean(cross_entropy_samples)
 
-    # zona - punt on the dW
-    dW = np.random.rand(D,C)
+
+    # --------- GRADIENT -------
+    # reference https://e2eml.school/softmax.html for softmax
+    grad_w = np.zeros((N,C))
+    for n in range(N):
+      softmax = y_one_hot[n]
+      softmax = np.reshape(softmax, (1, -1))
+      grad = np.ones(C)
+      d_softmax = (                                                           
+          softmax * np.identity(softmax.size)                                 
+          - softmax.transpose() @ softmax)
+      input_grad = grad @ d_softmax
+      grad_w[n] = input_grad
+
+    dW = np.dot(X.T, grad_w)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
