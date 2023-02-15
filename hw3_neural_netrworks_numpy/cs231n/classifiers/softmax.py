@@ -67,6 +67,9 @@ def softmax_loss_naive(W, X, y, reg):
     C = W.shape[1]
     # print("N={} D={} C={}".format(N,D,C))
 
+    # print("zona - X\n", X)
+    # print("zona - W\n", W)
+    
     # compute z=(X*W)
     z = np.zeros([N,C])
     for n in range(N):
@@ -74,30 +77,49 @@ def softmax_loss_naive(W, X, y, reg):
         for c in range(C):
            z[n,c] += X[n,d] * W[d,c]
 
+    # print("zona - z\n", z)
+
     # compute exp_z = exp(z)
     exp_z = np.zeros([N,C])
     for n in range(N):
       for c in range(C):
         exp_z[n,c] = np.exp(z[n,c])
 
-    # compute sum(exp_z) across each 'row' 
-    sum_exp_z = np.zeros([N])
+    # print("zona - exp_z\n", exp_z)
+
+    # this exp_z goes two places. I am making two "copies" so that
+    # I can keep straight when doing the backprop. (I use
+    # similar variable names for forward and backward)
+    exp_z_numerator = exp_z
+    exp_z_denominator = exp_z
+
+    # denominator - compute sum(exp_z) across each 'row' 
+    exp_z_denom_sum = np.zeros([N])
     for n in range(N):
       for c in range(C):
-        sum_exp_z[n] += exp_z[n,c]
+        exp_z_denom_sum[n] += exp_z_denominator[n,c]
+
+    exp_z_denom_sum_bcast = np.tile(exp_z_denom_sum,(C,1)).T
+
+    # print("zona - exp_z_numerator\n", exp_z_numerator)
+    # print("zona - exp_z_denom_sum_bcast\n", exp_z_denom_sum_bcast)
 
     # compute the softmax pr_y_predicted
     pr_y_predicted = np.zeros([N,C])
     for n in range(N):
-       pr_y_predicted[n:] = exp_z[n,:] / sum(exp_z[n])
+      for c in range(C):
+        pr_y_predicted[n,c] = exp_z_numerator[n,c] / exp_z_denom_sum_bcast[n,c]
+
+    # print("zona - pr_y_predicted\n", pr_y_predicted)
 
     # now the cross-entropy...
+    # h = sum( p(y) * log(p(y_predicted)) )
+    # there is no need to run the sum here since the
+    # the first term y is the true/given class and is 1-hot.
+    # It identifies exactly one class with probability = 1 and others 0.
     h_n = np.zeros([N])
     for n in range(N):
-      # y (given) is a specific class - that is - probability is 0 or 1
-      # it makes no sense to take log, so we conclude that it must be the first term...
       y_given_class = y[n]
-      # log(2 = 1) i.e. the first term == 1
       h_n[n] = 1. * np.log(pr_y_predicted[n,y_given_class])
 
     # average the losses across the batch
@@ -105,35 +127,51 @@ def softmax_loss_naive(W, X, y, reg):
 
     # --------- GRADIENT -------
     # we are working backward from the output of the "softmax" part of the network...
+    # we use same naming scheme but prefix with "grad_"
     #
-    grad_out = 1.  # is Nx1 but numpy will broadcast as needed
-    sum_exp_z_bcast = np.tile(sum_exp_z,(C,1)).T
+    grad_out = 1.
+    ### sum_exp_z_bcast = np.tile(sum_exp_z,(C,1)).T
 
-    # the divide is:  out = exp_z / sum_exp_z
-    # grad backward through that 
-    # for f(x,y) == x/y == x * y^-1
+    # grad backward through the divide:  out = exp_z / sum_exp_z
+    # grad for division f(x,y) == x/y == x * y^-1
     # df_dx = 1/y
     # df_dy = -x/y^-2
     # numerator:
-    grad_numerator = grad_out / sum_exp_z_bcast  # should be NxC
+    grad_exp_z_numerator = grad_out / exp_z_denom_sum_bcast  # should be NxC
+    # print("zona - grad_exp_z_numerator\n", grad_exp_z_numerator)
     
     # denominator:
-    grad_denominator = grad_out * -1. * exp_z / sum_exp_z_bcast / sum_exp_z_bcast
+    grad_exp_z_denom_sum_bcast = grad_out * -1. * exp_z_numerator / exp_z_denom_sum_bcast / exp_z_denom_sum_bcast
+    # print("zona - grad_exp_z_denom_sum_bcast\n", grad_exp_z_denom_sum_bcast)
 
-    # grad backward through the "broadcast" of exp_z into numerator and denominator terms
-    # for a broadcast the backprop grad is the sum
-    # reference https://www.youtube.com/watch?v=d14TUNcbn1k&t=138s at 34:14 minutes)
-    grad_exp_z = grad_numerator + grad_denominator  # all should be NxC
+    # grad backward through the broadcast in the denominator
+    # the broadcast occurs because the sum reduces it to a column vector, then that is
+    # applied to all classes. Broadcast (branch) is an "add" in backprop
+    grad_at_denom_branch = np.sum(grad_exp_z_denom_sum_bcast, axis=1)
+    # print("zona - grad_at_denom_branch\n", grad_at_denom_branch)
+
+    # grad backward through the "sum" in the denominator
+    # backprop of gradient through "+" (i.e. "sum") duplicates the gradient to each of the contributing terms
+    # reference https://www.youtube.com/watch?v=d14TUNcbn1k&t=138s at 34:14 minutes
+    # there are "C" terms
+    grad_exp_z_denominator = np.tile(grad_at_denom_branch,(C,1)).T
+    # print("zona - grad_exp_z_denominator\n", grad_exp_z_denominator)
+
+    # grad backward through the "branch" that occurs when z goes two places (numerator, denominator)
+    # rule for branch is the source gradient is the sum of the destination gradients
+    # danger zone... subtracting two very close numbers...
+    grad_exp_z = grad_exp_z_numerator + grad_exp_z_denominator
+    # print("zona - grad_exp_z\n", grad_exp_z)
 
     # grad backward through the exp_z = exp(z)
     # grad here is exp(z)
     grad_z = grad_exp_z  # should be NxC
 
-    # grad back the equation:  z = x * w
-    # grad of multiply is...
-    # given c = a*b gradient is: grad_a = b * grad_c
-    grad_x = np.dot(W, z.T) # should be NxD... (unused)
-    grad_w = np.dot(X.T, z) # should be DxC... <----what we want
+    # grad backwards through  z = X dot W
+    #  dz/dw = W.T
+    #  dz/dx = X.T
+    # grad_x = np.dot(grad_z, W.T)  # should be NxD (not used anyway)
+    grad_w = np.dot(X.T, grad_z)  # should be DxC... <----what we want
 
     dW = grad_w
 
