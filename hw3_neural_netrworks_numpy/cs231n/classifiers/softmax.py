@@ -34,7 +34,8 @@ def softmax_loss_naive(W, X, y, reg):
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    # --- SOFTMAX LOSS (for gradient see below) ---
+    # --- SOFTMAX LOSS (description...) ---
+    #
     # given X (NxD), W (DxC)...
     # 
     # first step is to compute softmax from X, W.
@@ -56,19 +57,8 @@ def softmax_loss_naive(W, X, y, reg):
     # skip creating the 1-hot vectors and instead just use the number that
     # is in "y" (it's the only one that will contribute).
 
-    # sanity checking...
-    # print("X.shape ", X.shape)
-    # print("y.shape ", y.shape)
-    # print("W.shape ", W.shape)
-    # assert X.shape[1] == W.shape[0], "ERROR: W and X need to have same dimension D"
-    # assert X.shape[0] == y.shape[0], "ERROR: X and Y need to have same dimension C"
-
     N, D = X.shape
     C = W.shape[1]
-    # print("N={} D={} C={}".format(N,D,C))
-
-    # print("zona - X\n", X)
-    # print("zona - W\n", W)
 
     # compute z=(X*W)
     z = np.zeros([N,C])
@@ -77,12 +67,7 @@ def softmax_loss_naive(W, X, y, reg):
         for c in range(C):
            z[n,c] += X[n,d] * W[d,c]
 
-    # print("zona - z\n", z)
-
     # numerically stabilize before taking exp()
-    # references include:
-    # https://e2eml.school/softmax.html and
-    # https://stackoverflow.com/questions/40575841/numpy-calculate-the-derivative-of-the-softmax-function
     z_max = z.max(axis=1).reshape(-1,1)
     z = z - z_max
     exp_z = np.exp(z)
@@ -93,11 +78,8 @@ def softmax_loss_naive(W, X, y, reg):
       for c in range(C):
         exp_z[n,c] = np.exp(z[n,c])
 
-    # print("zona - exp_z\n", exp_z)
-
-    # this exp_z goes two places. I am making two "copies" so that
-    # I can keep straight when doing the backprop. (I use
-    # similar variable names for forward and backward)
+    # exp_z goes two places. I am making two "copies" so that
+    # I can keep straight when doing the backprop.
     exp_z_numerator = exp_z
     exp_z_denominator = exp_z
 
@@ -109,17 +91,11 @@ def softmax_loss_naive(W, X, y, reg):
 
     exp_z_denom_sum_bcast = np.tile(exp_z_denom_sum,(C,1)).T
 
-    # print("zona - exp_z_numerator\n", exp_z_numerator)
-    # print("zona - exp_z_denom_sum\n", exp_z_denom_sum)
-    # print("zona - exp_z_denom_sum_bcast\n", exp_z_denom_sum_bcast)
-
     # compute the softmax pr_y_predicted
     pr_y_predicted = np.zeros([N,C])
     for n in range(N):
       for c in range(C):
         pr_y_predicted[n,c] = exp_z_numerator[n,c] / exp_z_denom_sum_bcast[n,c]
-
-    # print("zona - pr_y_predicted\n", pr_y_predicted)
 
     # now the cross-entropy...
     # h = sum( p(y) * log(p(y_predicted)) )
@@ -134,11 +110,11 @@ def softmax_loss_naive(W, X, y, reg):
     # average the losses across the batch
     loss = -np.mean(h_n)
 
-    # --------- GRADIENT -------
-    # convert y to 1-hot...
-    n_values = np.max(y) + 1
+    # --------- GRADIENT (attempt 2) -------
+    n_values = C
     y_one_hot = np.eye(n_values)[y]
-    # reference https://e2eml.school/softmax.html for softmax
+
+    # reference https://e2eml.school/softmax.html
     grad_w = np.zeros((N,C))
     for n in range(N):
       softmax = y_one_hot[n]
@@ -152,12 +128,10 @@ def softmax_loss_naive(W, X, y, reg):
 
     dW = np.dot(X.T, grad_w)
 
-    # # --------- GRADIENT -------
+    # # --------- GRADIENT (attempt 1) -------
     # # we are working backward from the output of the "softmax" part of the network...
     # # we use same naming scheme but prefix with "grad_"
-    # #
     # grad_out = 1.
-    # ### sum_exp_z_bcast = np.tile(sum_exp_z,(C,1)).T
 
     # # grad backward through the divide:  out = exp_z / sum_exp_z
     # # grad for division f(x,y) == x/y == x * y^-1
@@ -165,31 +139,24 @@ def softmax_loss_naive(W, X, y, reg):
     # # df_dy = -x/y^-2
     # # numerator:
     # grad_exp_z_numerator = grad_out / exp_z_denom_sum_bcast  # should be NxC
-    # # print("zona - grad_exp_z_numerator\n", grad_exp_z_numerator)
     
     # # denominator:
     # grad_exp_z_denom_sum_bcast = grad_out * -1. * exp_z_numerator / exp_z_denom_sum_bcast / exp_z_denom_sum_bcast
-
-    # # print("zona - grad_exp_z_denom_sum_bcast\n", grad_exp_z_denom_sum_bcast)
 
     # # grad backward through the broadcast in the denominator
     # # the broadcast occurs because the sum reduces it to a column vector, then that is
     # # applied to all classes. Broadcast (branch) is an "add" in backprop
     # grad_at_denom_branch = np.sum(grad_exp_z_denom_sum_bcast, axis=1)
-    # # print("zona - grad_at_denom_branch\n", grad_at_denom_branch)
 
     # # grad backward through the "sum" in the denominator
     # # backprop of gradient through "+" (i.e. "sum") duplicates the gradient to each of the contributing terms
     # # reference https://www.youtube.com/watch?v=d14TUNcbn1k&t=138s at 34:14 minutes
     # # there are "C" terms
     # grad_exp_z_denominator = np.tile(grad_at_denom_branch,(C,1)).T
-    # # print("zona - grad_exp_z_denominator\n", grad_exp_z_denominator)
 
     # # grad backward through the "branch" that occurs when z goes two places (numerator, denominator)
     # # rule for branch is the source gradient is the sum of the destination gradients
-    # # danger zone... subtracting two very close numbers...
     # grad_exp_z = grad_exp_z_numerator + grad_exp_z_denominator
-    # # print("zona - grad_exp_z\n", grad_exp_z)
 
     # # grad backward through the exp_z = exp(z)
     # # grad here is exp(z)
@@ -225,23 +192,13 @@ def softmax_loss_vectorized(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-    # sanity checking...
-    # print("X.shape ", X.shape)
-    # print("y.shape ", y.shape)
-    # print("W.shape ", W.shape)
-    # assert X.shape[1] == W.shape[0], "ERROR: W and X need to have same dimension D"
-    # assert X.shape[0] == y.shape[0], "ERROR: X and Y need to have same dimension C"
 
     N, D = X.shape
     C = W.shape[1]
-    # print("N={} D={} C={}".format(N,D,C))
 
     z = np.dot(X,W)
 
-    # numerically stabilize before taking exp()
-    # references include:
-    # https://e2eml.school/softmax.html and
-    # https://stackoverflow.com/questions/40575841/numpy-calculate-the-derivative-of-the-softmax-function
+    # numerically stabilize before exp()
     z_max = z.max(axis=1).reshape(-1,1)
     z = z - z_max
     exp_z = np.exp(z)
@@ -257,7 +214,6 @@ def softmax_loss_vectorized(W, X, y, reg):
 
     # the cross entropy...
     # convert y to 1-hot...
-    # n_values = np.max(y) + 1 #  ZONA FIX ELSEWHERE IN THIS FILE bug here - if y doesn't include a sample of class "max"
     n_values = C
     y_one_hot = np.eye(n_values)[y]
 
@@ -267,21 +223,15 @@ def softmax_loss_vectorized(W, X, y, reg):
 
 
     # --------- GRADIENT -------
-    # reference https://e2eml.school/softmax.html for softmax
+    # reference https://e2eml.school/softmax.html
     grad_w = np.zeros((N,C))
     for n in range(N):
       softmax = y_one_hot[n]
-      # print("softmax\n", softmax)
-      # softmax = np.reshape(softmax, (1, -1))
-      # print("softmax\n", softmax)
       grad = np.ones(C)
       d_softmax = (                                                           
           softmax * np.identity(softmax.size)                                 
           - softmax.transpose() @ softmax)
-      # print("grad\n",grad)
-      # print("d_softmax\n", d_softmax)
       input_grad = grad @ d_softmax
-      # print(input_grad)
       grad_w[n] = input_grad
     dW = np.dot(X.T, grad_w)
 

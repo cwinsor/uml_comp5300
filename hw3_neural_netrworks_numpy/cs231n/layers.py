@@ -191,23 +191,17 @@ def softmax_loss(x, y):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    # print("zona x.shape\n",x.shape)
-    # print("zona y.shape\n",y.shape)
-    
     N = x.shape[0]
     C = x.shape[1]
 
     # get a 1-hot version of y
-    # n_values = np.max(y) + 1  # ZONA BUG
     n_values = C
     y_one_hot = np.eye(n_values)[y]
 
     # forward:
-
-    # numerically stabilize before exp()
+    # if we want to numerically stabilize before exp()...
     # x_max = x.max(axis=1).reshape(-1,1)
     # x = x - x_max
-
     exp_x = np.exp(x)
     sum_by_row = np.sum(exp_x, axis=1)
     sum_by_row_tiled = np.tile(sum_by_row,(C,1)).T
@@ -216,51 +210,27 @@ def softmax_loss(x, y):
     cross_entropy_samples = np.sum( y_one_hot * np.log(softmax), axis=1)
     loss = -np.mean(cross_entropy_samples)
 
-    # gradient
+    # gradient (this is correct)
     # reference https://deepnotes.io/softmax-crossentropy
     m = y.shape[0]
     grad = softmax
     grad[range(m),y] -= 1
     grad = grad/m
     dx = grad
-    # return grad
 
-    # # backward:
+    # # gradient (my best attempt - not quite right)
     # # reference https://e2eml.school/softmax.html
-
     # grad_w = np.zeros((N,C))
     # for n in range(N):
     #   d_softmax = np.ones((C,C)) * 999.  # initialize to some bogus number
-    #   # print("softmax\n",softmax)
-    #   # print("softmax.shape",softmax.shape)
-    #   # print("softmax[0]\n",softmax[0])
     #   sts = softmax[n]  # softmax this sample
-    #   # print("sts\n",sts)
     #   d_softmax = (                                                           
     #       sts * np.identity(sts.size)                                 
     #       - sts.transpose() @ sts)
-
-    #   # print("y_one_hot.shape",y_one_hot.shape)
-    #   # downstream_grad = y_one_hot[n]  # y this sample
-    #   downstream_grad = np.ones(C)
-    #   # input_grad = downstream_grad @ d_softmax
-    #   # print("downstream_grad",downstream_grad)
-    #   # print("d_softmax",d_softmax)
-    #   input_grad = np.dot(downstream_grad, d_softmax)
-    #   print("input_grad", input_grad)
+    #   input_grad = d_softmax[y[n]]
+    #   # input_grad = np.dot(downstream_grad, d_softmax)
     #   grad_w[n] = input_grad
-    #   # assert False, "hoooo"
-
-    # # print("grad_w\n",grad_w)
-    # # print("grad_w.shape",grad_w.shape)
-    # # assert False, "hold upp"
-    # # dx = np.dot(x.T, grad_w.T)
     # dx = grad_w
-    # # print("grad_w\n",grad_w)
-    # # print("x.shape ", x.shape)
-    # # print("grad_w.shape", grad_w.shape)
-    # # print("dx.shape ", dx.shape)
-
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
