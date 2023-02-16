@@ -55,7 +55,18 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        D = input_dim
+        H = hidden_dim
+        C = num_classes
+
+        self.params["W1"] = np.random.normal(size=(D,H), scale=weight_scale)
+        self.params["b1"] = np.zeros(shape=H, dtype=np.float64)
+        self.params["W2"] = np.random.normal(size=(H,C), scale=weight_scale)
+        self.params["b2"] = np.zeros(shape=C, dtype=np.float64)
+
+        self.D = D
+        self.H = H
+        self.C = C
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -88,7 +99,26 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        aff1_out, aff1_cache = affine_forward(
+          X,
+          self.params["W1"],
+          self.params["b1"])
+
+        relu_out, relu_cache = relu_forward(
+          aff1_out)
+
+        aff2_out, aff2_cache = affine_forward(
+          relu_out,
+          self.params["W2"],
+          self.params["b2"])
+
+        scores = aff2_out
+        # # zona not sure what they want here for "scores"
+        # assert False, "hold up 123"
+        # print("zona aff2_out.shape")
+        # return np.exp(aff2_out)/sum(np.exp(aff2_out))
+     
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
@@ -112,7 +142,25 @@ class TwoLayerNet(object):
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        loss, sm_dx = softmax_loss(
+          aff2_out, y)
+          
+        aff2_dx, aff2_dw, aff2_db = affine_backward(
+          sm_dx,
+          aff2_cache)
+
+        relu_dx = relu_backward(
+          aff2_dw.T,
+          relu_cache)
+          
+        aff1_dx, aff1_dw, aff1_db = affine_backward(
+          relu_dx,
+          aff1_cache)
+
+        grads["W1"] = aff1_dw
+        grads["b1"] = aff1_db
+        grads["W2"] = aff2_dw
+        grads["b2"] = aff2_db
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
         ############################################################################
