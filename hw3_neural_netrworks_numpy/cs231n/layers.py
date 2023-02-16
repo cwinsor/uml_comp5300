@@ -2,7 +2,6 @@ from builtins import range
 import numpy as np
 
 
-
 def affine_forward(x, w, b):
     """
     Computes the forward pass for an affine (fully-connected) layer.
@@ -29,7 +28,7 @@ def affine_forward(x, w, b):
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     N = x.shape[0]
-    flattened_x = x.reshape((N,-1))
+    flattened_x = x.reshape((N, -1))
 
     out = np.dot(flattened_x, w) + b
 
@@ -68,7 +67,7 @@ def affine_backward(dout, cache):
     shape_w = w.shape
 
     N = shape_x[0]
-    flattened_x = x.reshape((N,-1))
+    flattened_x = x.reshape((N, -1))
 
     dx_flat = np.dot(dout, w.T)
     dx = np.reshape(dx_flat, shape_x)
@@ -102,7 +101,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    out = np.where(x>0., x, 0.)
+    out = np.where(x > 0., x, 0.)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -129,7 +128,7 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    dx = dout * np.where(x>0., 1., 0.)
+    dx = dout * np.where(x > 0., 1., 0.)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -191,7 +190,6 @@ def softmax_loss(x, y):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    N = x.shape[0]
     C = x.shape[1]
 
     # get a 1-hot version of y
@@ -204,17 +202,17 @@ def softmax_loss(x, y):
     # x = x - x_max
     exp_x = np.exp(x)
     sum_by_row = np.sum(exp_x, axis=1)
-    sum_by_row_tiled = np.tile(sum_by_row,(C,1)).T
+    sum_by_row_tiled = np.tile(sum_by_row, (C, 1)).T
     softmax = np.exp(x)/sum_by_row_tiled
     # cross entropy is sum( pr(y) * log(pr(y_predicted)) )
-    cross_entropy_samples = np.sum( y_one_hot * np.log(softmax), axis=1)
+    cross_entropy_samples = np.sum(y_one_hot * np.log(softmax), axis=1)
     loss = -np.mean(cross_entropy_samples)
 
     # gradient (this is correct)
     # reference https://deepnotes.io/softmax-crossentropy
     m = y.shape[0]
     grad = softmax
-    grad[range(m),y] -= 1
+    grad[range(m), y] -= 1
     grad = grad/m
     dx = grad
 
@@ -224,8 +222,8 @@ def softmax_loss(x, y):
     # for n in range(N):
     #   d_softmax = np.ones((C,C)) * 999.  # initialize to some bogus number
     #   sts = softmax[n]  # softmax this sample
-    #   d_softmax = (                                                           
-    #       sts * np.identity(sts.size)                                 
+    #   d_softmax = (
+    #       sts * np.identity(sts.size)
     #       - sts.transpose() @ sts)
     #   input_grad = d_softmax[y[n]]
     #   # input_grad = np.dot(downstream_grad, d_softmax)
