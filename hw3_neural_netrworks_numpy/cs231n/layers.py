@@ -28,7 +28,10 @@ def affine_forward(x, w, b):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    N = x.shape[0]
+    flattened_x = x.reshape((N,-1))
+
+    out = np.dot(flattened_x, w) + b
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -61,7 +64,19 @@ def affine_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    shape_x = x.shape
+    shape_w = w.shape
+
+    N = shape_x[0]
+    flattened_x = x.reshape((N,-1))
+
+    dx_flat = np.dot(dout, w.T)
+    dx = np.reshape(dx_flat, shape_x)
+
+    dw_flat = np.dot(flattened_x.T, dout)
+    dw = np.reshape(dw_flat, shape_w)
+
+    db = np.sum(dout, axis=0)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -87,7 +102,7 @@ def relu_forward(x):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    out = np.where(x>0., x, 0.)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -114,7 +129,7 @@ def relu_backward(dout, cache):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    dx = dout * np.where(x>0., 1., 0.)
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################
@@ -176,7 +191,76 @@ def softmax_loss(x, y):
     ###########################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-    pass
+    # print("zona x.shape\n",x.shape)
+    # print("zona y.shape\n",y.shape)
+    
+    N = x.shape[0]
+    C = x.shape[1]
+
+    # get a 1-hot version of y
+    # n_values = np.max(y) + 1  # ZONA BUG
+    n_values = C
+    y_one_hot = np.eye(n_values)[y]
+
+    # forward:
+
+    # numerically stabilize before exp()
+    # x_max = x.max(axis=1).reshape(-1,1)
+    # x = x - x_max
+
+    exp_x = np.exp(x)
+    sum_by_row = np.sum(exp_x, axis=1)
+    sum_by_row_tiled = np.tile(sum_by_row,(C,1)).T
+    softmax = np.exp(x)/sum_by_row_tiled
+    # cross entropy is sum( pr(y) * log(pr(y_predicted)) )
+    cross_entropy_samples = np.sum( y_one_hot * np.log(softmax), axis=1)
+    loss = -np.mean(cross_entropy_samples)
+
+    # gradient
+    # reference https://deepnotes.io/softmax-crossentropy
+    m = y.shape[0]
+    grad = softmax
+    grad[range(m),y] -= 1
+    grad = grad/m
+    dx = grad
+    # return grad
+
+    # # backward:
+    # # reference https://e2eml.school/softmax.html
+
+    # grad_w = np.zeros((N,C))
+    # for n in range(N):
+    #   d_softmax = np.ones((C,C)) * 999.  # initialize to some bogus number
+    #   # print("softmax\n",softmax)
+    #   # print("softmax.shape",softmax.shape)
+    #   # print("softmax[0]\n",softmax[0])
+    #   sts = softmax[n]  # softmax this sample
+    #   # print("sts\n",sts)
+    #   d_softmax = (                                                           
+    #       sts * np.identity(sts.size)                                 
+    #       - sts.transpose() @ sts)
+
+    #   # print("y_one_hot.shape",y_one_hot.shape)
+    #   # downstream_grad = y_one_hot[n]  # y this sample
+    #   downstream_grad = np.ones(C)
+    #   # input_grad = downstream_grad @ d_softmax
+    #   # print("downstream_grad",downstream_grad)
+    #   # print("d_softmax",d_softmax)
+    #   input_grad = np.dot(downstream_grad, d_softmax)
+    #   print("input_grad", input_grad)
+    #   grad_w[n] = input_grad
+    #   # assert False, "hoooo"
+
+    # # print("grad_w\n",grad_w)
+    # # print("grad_w.shape",grad_w.shape)
+    # # assert False, "hold upp"
+    # # dx = np.dot(x.T, grad_w.T)
+    # dx = grad_w
+    # # print("grad_w\n",grad_w)
+    # # print("x.shape ", x.shape)
+    # # print("grad_w.shape", grad_w.shape)
+    # # print("dx.shape ", dx.shape)
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
     ###########################################################################

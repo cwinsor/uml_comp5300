@@ -257,7 +257,8 @@ def softmax_loss_vectorized(W, X, y, reg):
 
     # the cross entropy...
     # convert y to 1-hot...
-    n_values = np.max(y) + 1
+    # n_values = np.max(y) + 1 #  ZONA FIX ELSEWHERE IN THIS FILE bug here - if y doesn't include a sample of class "max"
+    n_values = C
     y_one_hot = np.eye(n_values)[y]
 
     # cross entropy is sum( pr(y) * log(pr(y_predicted)) )
