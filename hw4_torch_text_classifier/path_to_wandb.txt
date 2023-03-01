@@ -1,0 +1,6 @@
+WandB runs are at
+https://wandb.ai/metrowest/hw4_nn_text_classifier
+
+Best run is
+https://wandb.ai/metrowest/hw4_nn_text_classifier/runs/a9d8vxjl
+
