@@ -1,11 +1,12 @@
 # Reference https://www.youtube.com/watch?v=kCc8FmEb1nY
 
+import datetime
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
 
 # hyperparameters
-batch_size = 64 # 32, 64
+batch_size = 128 # 32, 64
 block_size = 256 # 8, 256
 max_iters = 5000
 eval_interval = 500
@@ -15,7 +16,7 @@ assert device=="cuda", "error - this script requires GPU"
 eval_iters = 200
 n_embed = 384 # 32, 384 / 6 => every head is 64 dimensional
 n_head = 6
-n_layer = 1 # 1, 6
+n_layer = 6 # 1, 6
 dropout = 0.2
 
 
@@ -196,12 +197,15 @@ m = model.to(device)
 # create optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-for iter in range(max_iters):
+start_time = datetime.datetime.now()
+print(f"start: {start_time}")
+for iter in range(max_iters+1):
 
     # evaluate loss periodically
     if iter % eval_interval == 0:
         losses = estimate_loss()
-        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}")
+        delta_minutes = str((datetime.datetime.now() - start_time).total_seconds() / 60)
+        print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, minutes {delta_minutes}")
         
     # sample a batch of data
     xb, yb = get_batch("train")
@@ -212,9 +216,12 @@ for iter in range(max_iters):
     loss.backward()
     optimizer.step()
 
+print(f"end: {datetime.datetime.now()}")
+
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
 print(decode(m.generate(context, max_new_tokens=100)[0].tolist()))
+
 
 
         

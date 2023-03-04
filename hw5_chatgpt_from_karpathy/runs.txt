@@ -1,0 +1,54 @@
+
+PS [GPUBOX1]> date
+
+Saturday, March 4, 2023 1:51:54 PM
+
+
+PS [GPUBOX1]>  g:; cd 'g:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy'; & 'C:\Users\chris\anaconda3\envs\pytorch_c_cuda_11_7\python.exe' 'c:\Users\chris\.vscode\extensions\ms-python.python-2023.4.0\pythonFiles\lib\python\debugpy\adapter/../..\debugpy\launcher' '58044' '--' 'G:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy\bigram.py' 
+start: 2023-03-04 14:04:21.426907
+step 0: train loss 4.3514, val loss 4.3534, minutes 0.13727775
+end: 2023-03-04 14:05:08.760136
+Mat hel pean, to ofthe irnork. s lative hathe by unes the tou fr acot'gye'epbe ireveang therthes
+Nue
+hris\.vscode\extensions\ms-python.python-2023.4.0\pythonFiles\lib\python\debugpy\adapter/../..\debugpy\launcher' '58216' '--' 'G:\My Drive\code_uml\uml_comp5300\start: 2023-03-04 14:06:36.853204
+step 0: train loss 4.3479, val loss 4.3438, minutes 0.6335857166666667
+step 500: train loss 2.0033, val loss 2.0769, minutes 3.74229995
+step 1000: train loss 1.6163, val loss 1.7874, minutes 6.8504868666666665
+step 1500: train loss 1.4498, val loss 1.6598, minutes 9.957736483333333
+step 2000: train loss 1.3602, val loss 1.5848, minutes 13.067506816666667
+step 2500: train loss 1.2926, val loss 1.5401, minutes 16.174784066666668
+step 3000: train loss 1.2498, val loss 1.5315, minutes 19.28114125
+step 3500: train loss 1.2018, val loss 1.5023, minutes 22.387910766666668
+step 4000: train loss 1.1636, val loss 1.4955, minutes 25.494831316666666
+step 4500: train loss 1.1306, val loss 1.4946, minutes 28.602898433333333
+step 5000: train loss 1.0977, val loss 1.4892, minutes 31.711661633333332
+end: 2023-03-04 14:38:19.853043
+
+GREY BUCKINFORD:
+If this he brother, master forth all truth.
+
+WARWICK:
+I grant out far our grace, be
+PS [GPUBOX1]>  g:; cd 'g:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy'; & 'C:\Users\chris\anaconda3\envs\pytorch_c_cuda_11_7\python.exe' 'c:\Users\chris\.vscode\extensions\ms-python.python-2023.4.0\pythonFiles\lib\python\debugpy\adapter/../..\debugpy\launcher' '59896' '--' 'G:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy\bigram.py' 
+start: 2023-03-04 14:41:51.299630
+step 0: train loss 4.3480, val loss 4.3444, minutes 2.4070341833333333
+PS [GPUBOX1]>  g:; cd 'g:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy'; & 'C:\Users\chris\anaconda3\envs\pytorch_c_cuda_11_7\python.exe' 'c:\Users\chris\.vscode\extensions\ms-python.python-2023.4.0\pythonFiles\lib\python\debugpy\adapter/../..\debugpy\launcher' '60084' '--' 'G:\My Drive\code_uml\uml_comp5300\hw5_chatgpt_from_karpathy\bigram.py' 
+start: 2023-03-04 14:45:06.220632
+step 0: train loss 4.3480, val loss 4.3440, minutes 1.2317661666666666
+step 500: train loss 1.9126, val loss 2.0190, minutes 7.181629316666667
+step 1000: train loss 1.5295, val loss 1.7178, minutes 13.127438133333333
+step 1500: train loss 1.3746, val loss 1.5994, minutes 19.071825433333334
+step 2000: train loss 1.2799, val loss 1.5369, minutes 25.015837516666668
+step 2500: train loss 1.2147, val loss 1.5067, minutes 30.96050968333333
+step 3000: train loss 1.1594, val loss 1.4914, minutes 36.90374078333333
+step 3500: train loss 1.1091, val loss 1.4868, minutes 42.8490014
+step 4000: train loss 1.0616, val loss 1.4904, minutes 48.79253585
+step 4500: train loss 1.0146, val loss 1.5066, minutes 54.73471643333333
+step 5000: train loss 0.9683, val loss 1.5156, minutes 60.67600725
+end: 2023-03-04 15:45:47.348876
+
+
+KING EDWARD IV:
+I do we intellige hope to thee, chose
+But in my helpiiance, which are in the prices
+PS [GPUBOX1]> 
