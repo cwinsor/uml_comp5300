@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.nn import functional as F
 
 # hyperparameters
-batch_size = 128 # 32, 64
+batch_size = 64 # 32, 64
 block_size = 256 # 8, 256
 max_iters = 5000
 eval_interval = 500
@@ -19,6 +19,9 @@ n_head = 6
 n_layer = 6 # 1, 6
 dropout = 0.2
 
+start_time = datetime.datetime.now()
+run_name = start_time.strftime("%m%d_%H%M%S")
+print(f"start: {start_time}")
 
 torch.manual_seed(1235)
 
@@ -144,6 +147,10 @@ class BigramLanguageModel(nn.Module):
 
     def __init__(self):
         super().__init__()
+
+        self.best_iteration = -1
+        self.best_val_loss = float('inf')
+        
         # each token directly reads off thelogits from a lookup table
         self.token_embedding_table = nn.Embedding(vocab_size, n_embed)
         self.position_embedding_table = nn.Embedding(block_size, n_embed)
@@ -191,14 +198,12 @@ class BigramLanguageModel(nn.Module):
 
         return idx
 
-model = BigramLanguageModel()
-m = model.to(device)
+m_ = BigramLanguageModel()
+model = m_.to(device)
 
 # create optimizer
 optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
 
-start_time = datetime.datetime.now()
-print(f"start: {start_time}")
 for iter in range(max_iters+1):
 
     # evaluate loss periodically
@@ -207,6 +212,12 @@ for iter in range(max_iters+1):
         delta_minutes = str((datetime.datetime.now() - start_time).total_seconds() / 60)
         print(f"step {iter}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, minutes {delta_minutes}")
         
+        if losses["val"] < model.best_val_loss:
+            model.best_iteration = iter
+            model.best_val_loss = losses['val']
+            torch.save(model,              f"./models/m{run_name}_all.cpk")
+            torch.save(model.state_dict(), f"./models/m{run_name}_state.cpk")
+
     # sample a batch of data
     xb, yb = get_batch("train")
 
@@ -220,7 +231,7 @@ print(f"end: {datetime.datetime.now()}")
 
 # generate from the model
 context = torch.zeros((1, 1), dtype=torch.long, device=device)
-print(decode(m.generate(context, max_new_tokens=100)[0].tolist()))
+print(decode(model.generate(context, max_new_tokens=100)[0].tolist()))
 
 
 
