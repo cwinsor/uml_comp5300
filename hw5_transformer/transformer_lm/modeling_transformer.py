@@ -33,10 +33,11 @@ class TransformerEncoderLayer(nn.Module):
         # it will make your code more readable
         # YOUR CODE STARTS HERE  (our implementation is about 5-8 lines)    
 
-        self.self_attention = MultiHeadSelfAttention(input_size=num_heads, hidden=hidden, num_heads=num_heads,
+        self.self_attention = MultiHeadSelfAttention(input_size=hidden, hidden=hidden, num_heads=num_heads,
                                                      causal=causal, dropout=dropout)
         self.add_and_norm_1 = nn.LayerNorm(fcn_hidden)
         self.ff = nn.Linear(fcn_hidden, fcn_hidden)
+        ReLu
         self.add_and_norm_2 = nn.LayerNorm(fcn_hidden)
         self.dropout = nn.Dropout(dropout)
 
@@ -106,6 +107,16 @@ class TransformerEncoder(nn.Module):
         # You can use for-loop of python list comprehension to create the list of layers
         # YOUR CODE STARTS HERE (our implementation is about 6 lines)
 
+        self.token_embedding = nn.Embedding(vocab_size, hidden)
+        self.position_embedding = nn.Embedding(hidden, vocab_size)
+
+        self.logit_proj = torch.nn.Linear(hidden, vocab_size)  # ????????????
+
+        self.dropout = torch.nn.Dropout(self.dropout_rate)
+        self.encoder_layers = nn.ModuleList(
+            [torch.nn.TransformerEncoderLayer(d_model=hidden, nhead=hidden,
+                                              dim_feedforward=2048) for _ in range(num_layers)]
+
         # YOUR CODE ENDS HERE
 
     def _add_positions(self, sequence_tensor):
@@ -127,6 +138,11 @@ class TransformerEncoder(nn.Module):
         # you need to move them to the same device as sequence_tensor
         # You can get device of sequence_tensor with sequence_tensor.device
         # YOUR CODE STARTS HERE (our implementation is about 3 lines)
+
+        self.pos_emb = self.position_embedding(torch.arang(max_seq_len))  # T,C
+        self.tok_emb = = self.position_embedding(sequence_tensor)
+        # self.pos_emb.to_device(device) ZONA
+        # self.pos_emb.to_device(device)
 
         # YOUR CODE ENDS HERE
 
