@@ -55,8 +55,7 @@ class SelfAttention(nn.Module):
             scores = query @ key.transpose(-2,-1) # [B,S,C] @ [B,C,S] => [B,S,S]
             print(f"scores.shape {scores.shape}")
 
-            scale = C**0.5
-            scaled_scores = scores / scale # [B,S,S]
+            scaled_scores = scores / self.scale # [B,S,S]
             probs = F.softmax(scaled_scores, dim=-1) # [B,S,S]
             print(f"smx.shape {probs.shape}")
             
@@ -111,6 +110,7 @@ class MultiHeadSelfAttention(nn.Module):
         bs, seq, _ = x.shape
  
         # YOUR CODE STARTS HERE
+
 
         # YOUR CODE ENDS HERE
 
