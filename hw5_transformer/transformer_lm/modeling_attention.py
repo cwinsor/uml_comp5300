@@ -43,27 +43,18 @@ class SelfAttention(nn.Module):
             FloatTensor[batch_size, seq_len, hidden]
         """
         # YOUR CODE STARTS HERE (can be implemented in ~4 lines)
-        def many_lines(x):
-            B, S, C = x.shape
 
-            query = self.q(x) # [B,S,C] @ [C,H] => [B,S,H]
-            key = self.k(x)   # [B,S,C] @ [C,H] => [B,S,H]
-            value = self.v(x) # [B,S,C] @ [C,H] => [B,S,H]
-            print(f"x.shape {x.shape}")
-            print(f"query.shape {query.shape}")
+        query = self.q(x)  # [B,S,C] @ [C,H] => [B,S,H]
+        key = self.k(x)    # [B,S,C] @ [C,H] => [B,S,H]
+        value = self.v(x)  # [B,S,C] @ [C,H] => [B,S,H]
 
-            scores = query @ key.transpose(-2,-1) # [B,S,C] @ [B,C,S] => [B,S,S]
-            print(f"scores.shape {scores.shape}")
+        scores = query @ key.transpose(-2, -1)  # [B,S,C] @ [B,C,S] => [B,S,S]
+        scaled_scores = scores / self.scale  # [B,S,S]
+        probs = F.softmax(scaled_scores, dim=-1)  # [B,S,S]
+        out = probs @ value  # [B,S,S] @ [B,S,H] => [B,S,H]
 
-            scaled_scores = scores / self.scale # [B,S,S]
-            probs = F.softmax(scaled_scores, dim=-1) # [B,S,S]
-            print(f"smx.shape {probs.shape}")
-            
-            out = probs @ value # [B,S,S] @ [B,S,H] => [B,S,H]
-            print(f"out.shape {out.shape}")
-            return out
-        out = many_lines(x)
         return out
+    
         # YOUR CODE ENDS HERE
 
 
@@ -110,7 +101,30 @@ class MultiHeadSelfAttention(nn.Module):
         bs, seq, _ = x.shape
  
         # YOUR CODE STARTS HERE
-
+        query = torch.cat([self.q(x) for _ in range(self.num_heads)], dim=0)  # [B,S,C] @ [C,H] => [HEADS,B,S,H]
+        key = torch.cat([self.k(x) for _ in range(self.num_heads)], dim=0)    # [B,S,C] @ [C,H] => [HEADS,B,S,H]
+        value = torch.cat([self.v(x) for _ in range(self.num_heads)], dim=0)  # [B,S,C] @ [C,H] => [HEADS,B,S,H]
+        score = query @ key.transpose(-2, -1)  # [HEADS,B,S,H] @ [HEADS,B,H,S] => [HEADS,B,S,S]
+        if self.causal:
+            mask = torch.tril(torch.ones(seq, seq)).T
+            score = score.masked_fill(mask == 0, float('-inf'))  # [HEADS,B,S,S]
+        # ============
+        # 2.3.1. compute probabilities naming them probs, first dimension to be NUM_HEADS * B
+        scaled_score = (score / self.scale).reshape(self.num_heads * bs, seq, seq)  # [HEADS * B, S, S]
+        probs = F.softmax(scaled_score, dim=-1).reshape(self.num_heads * bs, seq, seq)  # [HEADS * B, S, S]
+        # ============
+        # 2.3.2 apply dropout
+        probs = self.dropout(probs)
+        # ============
+        # 2.3.3 compute attention
+        attention = probs @ value  # [HEADS * B, S, S] * [HEADS * B, S, H] => [NUM_HEADS * B, S, H]
+        # ============
+        # 2.3.4 apply transforms getting to [batch, seq, hidden]
+        heads_reshaped = attention.reshape((self.num_heads, bs, seq, -1))  # [NUM_HEADS, B, S, H]
+        heads_summed = heads_reshaped.sum(dim=0)  # [B, S, H]
+        # ============
+        # 2.3.5 mix attentions naming output att
+        att = self.mix(heads_summed)  # [B, S, H]
 
         # YOUR CODE ENDS HERE
 

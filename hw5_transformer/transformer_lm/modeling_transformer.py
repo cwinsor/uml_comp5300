@@ -33,6 +33,13 @@ class TransformerEncoderLayer(nn.Module):
         # it will make your code more readable
         # YOUR CODE STARTS HERE  (our implementation is about 5-8 lines)    
 
+        self.self_attention = MultiHeadSelfAttention(input_size=num_heads, hidden=hidden, num_heads=num_heads,
+                                                     causal=causal, dropout=dropout)
+        self.add_and_norm_1 = nn.LayerNorm(fcn_hidden)
+        self.ff = nn.Linear(fcn_hidden, fcn_hidden)
+        self.add_and_norm_2 = nn.LayerNorm(fcn_hidden)
+        self.dropout = nn.Dropout(dropout)
+
         # YOUR CODE ENDS HERE
 
     def forward(self, x):
@@ -52,6 +59,12 @@ class TransformerEncoderLayer(nn.Module):
         # x = some_stuff_that_changes_x(x)
         # x = x + residual
         # YOUR CODE STARTS HERE (our implementation is about 6 lines)
+
+        x1 = self.self_attention(x)
+        x2 = self.add_and_norm_1(x1 + x)
+        x3 = self.ff(x2)
+        x4 = self.add_and_norm_2(x3 + x2)
+        x = self.dropout(x4)
 
         # YOUR CODE ENDS HERE
         return x
