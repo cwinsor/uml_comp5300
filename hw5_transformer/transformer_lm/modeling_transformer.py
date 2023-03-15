@@ -63,12 +63,8 @@ class TransformerEncoderLayer(nn.Module):
         # x = x + residual
         # YOUR CODE STARTS HERE (our implementation is about 6 lines)
 
-        print(f"x1.shape {x.shape}")
         x1 = self.self_attention(x)
-        print(f"x1.shape {x1.shape}")
-
         x2 = self.add_and_norm_1(x1 + x)
-        # assert False, "hold up"
         x3 = self.lin1(x2)
         x4 = self.relu(x3)
         x5 = self.lin2(x4)
@@ -117,14 +113,15 @@ class TransformerEncoder(nn.Module):
         # YOUR CODE STARTS HERE (our implementation is about 6 lines)
 
         self.token_embedding = nn.Embedding(vocab_size, hidden)
-        self.position_embedding = nn.Embedding(hidden, vocab_size)
+        self.pos_emb = nn.Embedding(hidden, vocab_size)
 
         self.logit_proj = torch.nn.Linear(hidden, vocab_size)
 
         self.dropout = torch.nn.Dropout(self.dropout_rate)
         self.encoder_layers = nn.ModuleList(
-            [torch.nn.TransformerEncoderLayer(d_model=hidden, nhead=hidden,
-                                              dim_feedforward=2048) for _ in range(num_layers)])
+            [TransformerEncoderLayer(hidden=hidden,
+                                     num_heads=num_heads,
+                                     fcn_hidden=fcn_hidden) for _ in range(num_layers)])
 
         # YOUR CODE ENDS HERE
 
@@ -148,10 +145,24 @@ class TransformerEncoder(nn.Module):
         # You can get device of sequence_tensor with sequence_tensor.device
         # YOUR CODE STARTS HERE (our implementation is about 3 lines)
 
-        self.pos_emb = self.position_embedding(torch.arang(self.max_seq_len))  # T,C
-        self.tok_emb = self.position_embedding(sequence_tensor)
+        # self.pos_emb = self.position_embedding(torch.arang(self.max_seq_len))  # T,C
+        # self.tok_emb = self.position_embedding(sequence_tensor)
         # self.pos_emb.to_device(device) ZONA
         # self.pos_emb.to_device(device)
+
+        # ref: https://machinelearningmastery.com/a-gentle-introduction-to-positional-encoding-in-transformer-models-part-1/
+        # import numpy as np
+        # def getPositionEncoding(seq_len, d, n=10000):
+        #     P = np.zeros((seq_len, d))
+        #     for k in range(seq_len):
+        #         for i in np.arange(int(d/2)):
+        #             denominator = np.power(n, 2*i/d)
+        #             P[k, 2*i] = np.sin(k/denominator)
+        #             P[k, 2*i+1] = np.cos(k/denominator)
+        #     return P
+        # self.pos_emb = 
+
+        return sequence_tensor  # ZONA
 
         # YOUR CODE ENDS HERE
 
@@ -172,6 +183,12 @@ class TransformerEncoder(nn.Module):
         # NOTE: Please write shape of the tensor for each line of code
         # YOUR CODE STARTS HERE (our implementation is about 4 lines)
 
+        x = self.token_embedding(input_ids)  # B,SEQ_LEN --> [B, SEQ_LEN, HIDDEN_SIZE]
+        x = self._add_positions(x)  # [B, SEQ_LEN, HIDDEN_SIZE]
+        for i, encoder_layer in enumerate(self.encoder_layers):
+            x = encoder_layer(x) # [B, SEQ_LEN, HIDDEN_SIZE]
+        return x
+    
         # YOUR CODE ENDS HERE
 
 
@@ -186,6 +203,15 @@ class TransformerLM(nn.Module):
         # Remember that when we use Transformer for language modeling, it should be **causal** or it will cheat.
         # Output layer should predict the logits for all words in the vocabulary (size of logits = vocab_size)
         # YOUR CODE STARTS HERE (our implementation is about 2 lines)
+
+        self.transformer_encoder = TransformerEncoder(num_layers=num_layers,
+                                                      hidden=hidden,
+                                                      num_heads=num_heads,
+                                                      fcn_hidden=fcn_hidden,
+                                                      vocab_size=vocab_size,
+                                                      max_seq_len=max_seq_len)
+        self.linear = nn.Linear(hidden, vocab_size)
+        self.dropout = nn.Dropout()
 
         # YOUR CODE ENDS HERE
     
@@ -205,6 +231,11 @@ class TransformerLM(nn.Module):
         # 3. Output Layer to produce logits over the classes (our vocabulary in case of language modeling)
         # YOUR CODE STARTS HERE (our implementation is 2 lines)
 
+        x = self.transformer_encoder(input_ids)  # B,SEQ_LEN --> [B, SEQ_LEN, HIDDEN_SIZE]
+        x = self.linear(x)  # [B, SEQ_LEN, HIDDEN_SIZE]
+        x = self.dropout(x)  # [B, SEQ_LEN, HIDDEN_SIZE]
+        return x
+    
         # YOUR CODE ENDS HERE
 
     def save_pretrained(self, save_path):
