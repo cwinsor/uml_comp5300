@@ -1,0 +1,6 @@
+
+Homework 5: Transformer (Chris Winsor)
+
+WandB runs are at https://wandb.ai/metrowest/hw5_transformer
+
+Git code is at https://github.com/cwinsor/uml_comp5300.git in the /hw5_tranformer folder.
