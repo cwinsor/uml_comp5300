@@ -194,6 +194,12 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # 3. Create a dropout layer
         # YOUR CODE STARTS HERE (our implementation is about 5 lines)
 
+        self.encoder_embeddings = nn.Embedding(num_embeddings=src_vocab_size)
+        self.decoder_embeddings = nn.Embedding(num_embeddings=tgt_vocab_size)
+        self.positional = nn.Embedding(num_embeddings=tgt_vocab_size)
+        self.out_proj = nn.Linear(fcn_hidden, tgt_vocab_size)
+        self.dropout = nn.Dropout(p=dropout)
+
         # YOUR CODE ENDS HERE
 
         # Task 2.4 (1 point)
@@ -209,6 +215,15 @@ class TransfomerEncoderDecoderModel(nn.Module):
         #
         # YOUR CODE STARTS HERE (our implementation is 3-6 lines)
 
+        self.encoder_layers = nn.ModuleList([TransformerEncoderLayer(hidden,
+                                                                     num_heads,
+                                                                     fcn_hidden,
+                                                                     dropout=0.0,
+                                                                     causal=False) for _ in range(num_layers)])
+        self.decoder_layers = nn.ModuleList([TransformerDecoderLayer(hidden,
+                                                                     num_heads,
+                                                                     fcn_hidden,
+                                                                     dropout=0.0) for _ in range(num_layers)])
         # YOUR CODE ENDS HERE
 
     def _add_positions(self, sequence_tensor):
@@ -274,6 +289,11 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # 3a. Remember to use key_padding_mask to mask out padding tokens
         # YOUR CODE STARTS HERE
 
+        source_embeddings = self.encoder_embeddings(input_ids)
+        source_embeddings = self._add_positions(source_embeddings)
+        encoder_hidden_states = [layer(x=source_embeddings,
+                                       key_padding_mask=key_padding_mask) for layer in self.encoder_layers]
+
         # YOUR CODE ENDS HERE
 
         return encoder_hidden_states
@@ -288,6 +308,12 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # 4. use self.out_proj to get output logits, a.k.a log-probabilies of the next translation tokens
         # YOUR CODE STARTS HERE
 
+        decoder_embeddings = self.decoder_embeddings(decoder_input_ids)
+        decoder_embeddings = self._add_positions(decoder_embeddings)
+        decoder_hidden_states = [layer(decoder_hidden_states=decoder_embeddings,
+                                       encoder_hidden_states=encoder_hidden_states,
+                                       key_padding_mask=key_padding_mask) for layer in self.decoder_layers]
+        logits = self.out_proj(decoder_hidden_states)
         ## YOUR CODE ENDS HERE
         return logits
     
