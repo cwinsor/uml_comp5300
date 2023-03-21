@@ -64,38 +64,17 @@ class MultiHeadAttention(nn.Module):
         # Note : Please write shape of each tensor for each line of code
         ## YOUR CODE STARTS HERE## ~ 2 lines code
 
-        if kv is None:
-            kv = q
-        q = self.q(q)   # BATCH, SRC_SEQ -> BATCH, SRC_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
-        k = self.k(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
-        v = self.v(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
-
         # YOUR CODE ENDS HERE
 
         bs, attending_seq, _ = q.shape
         attended_seq = k.shape[1]
 
-        # COPY YOUR PREVIOUS HOMEWORK CODE HERE
-
+        # [b, s, h] -> [b, h, s] -> [b * heads, h / heads, s] -> [b * heads, s, h / heads]
         k = k.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()  # [batch * num_heads, seq, hidden / num_heads]
         q = q.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()
         v = v.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()
 
-        # we have [BATCH, SEQ, HIDDEN]
-        # we want [BATCH, HEADS, SEQ, HEADSIZE]
-        # gather the dimensions (clarifying)
-        BATCH, HEADS, SRC_SEQ, TAR_SEQ, HEADSIZE = bs, self.num_heads, attending_seq, attended_seq, self.head_size
-        # print(f"BATCH {BATCH} HEADS {HEADS} SRC_SEQ {SRC_SEQ} TARGET_SEQ {TAR_SEQ} HEADSIZE {HEADSIZE}")
-
-        # reshape
-        # q = torch.reshape(q, (BATCH, SRC_SEQ, HEADS, HEADSIZE))  # [BATCH, SRC_SEQ, HEADS, HEADSIZE]
-        # q = torch.transpose(q, -2, -3)                           # [BATCH, HEADS, SRC_SEQ, HEADSIZE]
-        # k = torch.reshape(k, (BATCH, TAR_SEQ, HEADS, HEADSIZE))  # [BATCH, TAR_SEQ, HEADS, HEADSIZE]
-        # k = torch.transpose(k, -2, -3)                           # [BATCH, HEADS, TAR_SEQ, HEADSIZE]
-
-        scores = q @ k.transpose(-2, -1)  # [B, H, SRC_SEQ, HEADSIZE] * [B, H, HEADSIZE, TAR_SEQ] -> [B, H, SRC_SEQ, TAR_SEQ]
-        # scores = scores.reshape(BATCH * HEADS, SRC_SEQ, TAR_SEQ)  # [BATCH * HEADS, SRC_SEQ, TAR_SEQ]
-        # MY CODE ENDS HERE
+        scores = q @ k.transpose(1, 2) / self.scale  # [batch * num_heads, attending_seq, attended_seq]
 
         assert scores.shape == (bs * self.num_heads, attending_seq, attended_seq)
 
@@ -119,19 +98,13 @@ class MultiHeadAttention(nn.Module):
             causal_mask = torch.triu(torch.ones(attending_seq, attended_seq, dtype=torch.bool, device=scores.device), diagonal=1)
             scores.masked_fill_(causal_mask.bool().unsqueeze(0), float("-inf"))
 
-        # COPY YOUR PREVIOUS HOMEWORK CODE HERE (~ 4 lines)
+        probs = torch.softmax(scores, dim=-1)  # [batch * num_heads, tgt_seq, src_seq]
+        att = probs @ v  # [batch * num_heads, tgt_seq, hidden / num_heads]
 
-        scores = scores / self.scale  # [BATCH * HEADS, SRC_SEQ, TAR_SEQ]
-        probs = nn.functional.softmax(scores, dim=-1)  # [BATCH * HEADS, SRC_SEQ, TAR_SEQ]
-        # probs = self.dropout(probs)
-        att = probs @ v  # [BATCH * HEADS, SRC_SEQ, TAR_SEQ] @ [BATCH, TAR_SEQ, HIDDEN] => [BATCH, HEADS, SRC_SEQ, HIDDEN]
-        att = att.transpose(1, 2)  # [BATCH, SRC_SEQ, HEADS, HIDDEN]
-        att = att.reshape(BATCH, -1, SRC_SEQ)  # [BATCH, SRC_SEQ * HEADS, HIDDEN]
-        att = att.transpose(1, 2)  # [BATCH, HIDDEN, SRC_SEQ * HEADS]
-        att = att.contiguous()
-
-        att = self.mix(att)  # [BATCH, HIDDEN, SRC_SEQ * HEADS]
-        # MY CODE ENDS HERE
+        # [b * heads, s, h / heads] -> [b * heads, h / heads, s] -> [b, h, s] -> [b, s, h]
+        att = att.transpose(1, 2).reshape(bs, -1, attending_seq).transpose(1, 2).contiguous()
+    
+        att = self.mix(att)
 
         if return_attention:
             return att, probs
