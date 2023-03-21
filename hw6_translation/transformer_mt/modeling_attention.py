@@ -107,9 +107,30 @@ class MultiHeadAttention(nn.Module):
             # You might need to reshape the scores to [batch_size, seq_len, seq_len]
             # in this case, remember to reshape them back
             # Our implementation is 3 lines
-            # YOUR CODE STARTS HERE
+            # YOUR COD E STARTS HERE
 
-            pass
+            print(f"scores at start should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            print(f"key_passing_mask.shape should be {BATCH} {TAR_SEQ} is {key_padding_mask.shape}")
+            # print(f"{key_padding_mask}")
+            print()
+            scores = scores.reshape(BATCH, HEADS, SRC_SEQ, TAR_SEQ)
+            print(f"scores after 1... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            scores = scores.transpose(0, 2)
+            print(f"scores after 2... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
+            # scores = scores.mul(key_padding_mask)
+            # print(f"scores.shape 3a... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
+            # print(key_padding_mask==1)
+            # scores = torch.Tensor.masked_fill(mask=(key_padding_mask == 1), value=float('-inf'))
+            scores = scores.masked_fill(mask=(key_padding_mask == 1), value=float('-inf'))
+            # print(scores)
+            # assert False, "hold up"
+            print(f"scores.shape 3b... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
+            scores = scores.transpose(0, 2)
+            print(f"scores after 4... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            scores = scores.reshape(BATCH * HEADS, SRC_SEQ, TAR_SEQ)
+            print(f"scores after 5... should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+
+
             # YOUR CODE ENDS HERE
 
         assert scores.size() == (bs * self.num_heads, attending_seq, attended_seq),\
