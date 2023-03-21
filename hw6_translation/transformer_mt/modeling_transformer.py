@@ -68,7 +68,11 @@ class TransformerDecoderLayer(nn.Module):
         self.fcn_layer_norm = nn.LayerNorm(hidden)
     
         self.fcn = nn.Sequential(
-            nn.Linear(in_features=hidden, out_features=hidden),
+            nn.Linear(in_features=hidden, out_features=fcn_hidden),
+            nn.ReLU(),
+            nn.Linear(in_features=fcn_hidden, out_features=fcn_hidden//2),
+            nn.ReLU(),
+            nn.Linear(in_features=fcn_hidden//2, out_features=hidden),
             nn.ReLU()
             )
 
@@ -115,7 +119,7 @@ class TransformerDecoderLayer(nn.Module):
         print(f"at 1: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
 
         residual = x
-        x = self.self_attention(q = decoder_hidden_states,
+        x = self.self_attention(q=decoder_hidden_states,
                                 kv=None,
                                 key_padding_mask=key_padding_mask,
                                 return_attention=False)
