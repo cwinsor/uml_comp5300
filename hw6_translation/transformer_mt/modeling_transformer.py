@@ -50,6 +50,30 @@ class TransformerDecoderLayer(nn.Module):
         # 5. Create self.dropout layer using nn.Dropout
         # YOUR CODE STARTS HERE  (our implementation is about 5-8 lines) 
 
+        print("HERE------------")
+        print(f"HIDDEN {hidden} FCN_HIDDEN {fcn_hidden}")
+        self.self_attention = MultiHeadAttention(input_size=hidden,
+                                                 hidden=hidden,
+                                                 num_heads=num_heads,
+                                                 causal=True
+                                                 )
+        self.cross_attention = MultiHeadAttention(input_size=hidden,
+                                                  hidden=hidden,
+                                                  num_heads=num_heads,
+                                                  causal=False
+                                                  )
+
+        self.att_layer_norm = nn.LayerNorm(hidden)
+        self.cross_att_layer_norm = nn.LayerNorm(hidden)
+        self.fcn_layer_norm = nn.LayerNorm(hidden)
+    
+        self.fcn = nn.Sequential(
+            nn.Linear(in_features=hidden, out_features=hidden),
+            nn.ReLU()
+            )
+
+        self.dropout = nn.Dropout(p=dropout)
+
         # YOUR CODE ENDS HERE 
     
     def forward(self, decoder_hidden_states, encoder_hidden_states, key_padding_mask=None):
@@ -79,6 +103,46 @@ class TransformerDecoderLayer(nn.Module):
         # 10. LayerNorm
         # Note : Please write shape of the tensor for each line of code
         # YOUR CODE STARTS HERE (our implementation is about 10 lines)
+
+        BATCH, Q_SEQ_LEN, HIDDEN = decoder_hidden_states.shape
+        K_SEQ_LEN = encoder_hidden_states.shape[1]
+        print(f"BATCH {BATCH} QUERY_SEQUENCE_LENGTH {Q_SEQ_LEN} KEY_SEQUENCE_LENGTH {K_SEQ_LEN} HIDDEN {HIDDEN}")
+        print(f"encoder_hidden_states.shape expect  {BATCH} {K_SEQ_LEN} {HIDDEN} observed {encoder_hidden_states.shape}")
+        print(f"decoder_hidden_states.shape expect  {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {decoder_hidden_states.shape}")
+        print()
+
+        x = decoder_hidden_states
+        print(f"at 1: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+
+        residual = x
+        x = self.self_attention(q = decoder_hidden_states,
+                                kv=None,
+                                key_padding_mask=key_padding_mask,
+                                return_attention=False)
+        
+        print(f"at 2: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+        x = x + residual
+        print(f"at 3: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+        x = self.att_layer_norm(x)
+        print(f"at 4: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+
+        residual = x
+        x = self.cross_attention(q=x,
+                                 kv=encoder_hidden_states,
+                                 key_padding_mask=None,
+                                 return_attention=False)
+        print(f"at 5: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+        
+        x = x + residual  # doesn't work...
+        x = self.cross_att_layer_norm(x)
+
+        residual = x
+        x = self.fcn(x)
+        print(f"at 6: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
+        self.dropout(x)
+        x = x + residual
+        x = self.fcn_layer_norm(x)
+        print(f"at 7: expected {BATCH} {Q_SEQ_LEN} {HIDDEN} observed {x.shape}")
 
         ##YOUR CODE ENDS HERE##
         return x
