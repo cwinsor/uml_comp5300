@@ -116,14 +116,14 @@ class MultiHeadAttention(nn.Module):
             # Our implementation is 3 lines
             # YOUR COD E STARTS HERE
 
-            print(f"scores at start should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
-            print(f"key_passing_mask.shape should be {BATCH} {TAR_SEQ} is {key_padding_mask.shape}")
+            # print(f"scores at start should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            # print(f"key_passing_mask.shape should be {BATCH} {TAR_SEQ} is {key_padding_mask.shape}")
             # print(f"{key_padding_mask}")
-            print()
+            # print()
             scores = scores.reshape(BATCH, HEADS, SRC_SEQ, TAR_SEQ)
-            print(f"scores after 1... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            # print(f"scores after 1... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
             scores = scores.transpose(0, 2)
-            print(f"scores after 2... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
+            # print(f"scores after 2... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
             # scores = scores.mul(key_padding_mask)
             # print(f"scores.shape 3a... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
             # print(key_padding_mask==1)
@@ -133,11 +133,11 @@ class MultiHeadAttention(nn.Module):
 
             # print(scores)
             # assert False, "hold up"
-            print(f"scores.shape 3b... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
+            # print(f"scores.shape 3b... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
             scores = scores.transpose(0, 2)
-            print(f"scores after 4... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            # print(f"scores after 4... should be {BATCH} {HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
             scores = scores.reshape(BATCH * HEADS, SRC_SEQ, TAR_SEQ)
-            print(f"scores after 5... should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
+            # print(f"scores after 5... should be {BATCH * HEADS} {SRC_SEQ} {TAR_SEQ} is {scores.shape}")
 
 
             # YOUR CODE ENDS HERE
