@@ -135,7 +135,7 @@ class TransformerDecoderLayer(nn.Module):
 
         x = self.self_attention(q=decoder_hidden_states,
                                 kv=None,
-                                key_padding_mask=key_padding_mask,
+                                key_padding_mask=None,
                                 return_attention=False)
         x = x + residual
         x = self.att_layer_norm(x)
@@ -143,7 +143,7 @@ class TransformerDecoderLayer(nn.Module):
 
         x = self.cross_attention(q=x,
                                  kv=encoder_hidden_states,
-                                 key_padding_mask=None,
+                                 key_padding_mask=key_padding_mask,
                                  return_attention=False)
         x = x + residual  # doesn't work...
         x = self.cross_att_layer_norm(x)

@@ -65,10 +65,17 @@ class MultiHeadAttention(nn.Module):
         ## YOUR CODE STARTS HERE## ~ 2 lines code
 
         if kv is None:
-            kv = q
-        q = self.q(q)   # BATCH, SRC_SEQ -> BATCH, SRC_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
-        k = self.k(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
-        v = self.v(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
+            v = q   # BATCH, SRC_SEQ -> BATCH, SRC_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
+            k = q  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
+        else:
+            k = self.k(kv)
+            v = self.v(kv)
+            if torch.equal(q,kv):
+                key_padding_mask = None
+
+        # q = self.q(q)   # BATCH, SRC_SEQ -> BATCH, SRC_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
+        # k = self.k(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
+        # v = self.v(kv)  # BATCH, TAR_SEQ -> BATCH, TAR_SEQ, HIDDEN (where HIDDEN = N_HEADS * HEADSIZE)
 
         # YOUR CODE ENDS HERE
 
@@ -78,7 +85,7 @@ class MultiHeadAttention(nn.Module):
         # COPY YOUR PREVIOUS HOMEWORK CODE HERE
 
         k = k.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()  # [batch * num_heads, seq, hidden / num_heads]
-        q = q.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()
+        q = self.q(q).transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()
         v = v.transpose(1, 2).reshape(bs * self.num_heads, self.head_size, -1).transpose(1, 2).contiguous()
 
         # we have [BATCH, SEQ, HIDDEN]
@@ -121,7 +128,9 @@ class MultiHeadAttention(nn.Module):
             # print(f"scores.shape 3a... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")
             # print(key_padding_mask==1)
             # scores = torch.Tensor.masked_fill(mask=(key_padding_mask == 1), value=float('-inf'))
-            scores = scores.masked_fill(mask=(key_padding_mask == 1), value=float('-inf'))
+            # scores = scores.masked_fill(mask=(key_padding_mask.unsqueeze(1).unsqueeze(2) == 1), value=float('-inf'))
+            scores = scores.masked_fill(mask=(key_padding_mask==1), value=float('-inf'))
+
             # print(scores)
             # assert False, "hold up"
             print(f"scores.shape 3b... should be {SRC_SEQ} {HEADS} {BATCH} {TAR_SEQ} is {scores.shape}")

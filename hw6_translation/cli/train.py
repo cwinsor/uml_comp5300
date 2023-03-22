@@ -475,7 +475,7 @@ def main():
                            )
             
             loss = F.cross_entropy(logits.view(-1, logits.shape[-1]),
-                                   labels.view[-1],
+                                   labels.view(-1),
                                    ignore_index=target_tokenizer.pad_token_id
                                    )
             
