@@ -30,10 +30,31 @@ Hypothesis = namedtuple("Hypothesis", ["value", "score"])
 
 class TransformerEncoderLayer(nn.Module):
     def __init__(self, hidden, num_heads, fcn_hidden, dropout=0.0, causal=False):
-        raise NotImplementedError("Please copy your implementatino of transformer encoder here")
+
+        # from Homework 5
+        super().__init__()
+        self.self_attention = MultiHeadAttention(input_size=hidden, hidden=hidden, num_heads=num_heads,
+                                                 causal=causal)
+        self.add_and_norm_1 = nn.LayerNorm(hidden)
+        self.lin1 = nn.Linear(hidden, fcn_hidden)
+        self.relu = nn.ReLU()
+        self.lin2 = nn.Linear(fcn_hidden, fcn_hidden)
+        self.add_and_norm_2 = nn.LayerNorm(fcn_hidden)
+        self.dropout = nn.Dropout(dropout)
+        self.lin3 = nn.Linear(fcn_hidden, hidden)
 
     def forward(self, x, key_padding_mask=None):
-        raise NotImplementedError("Please copy your implementatino of transformer encoder here")
+
+        # from Homework 5
+        x1 = self.self_attention(x)
+        x2 = self.add_and_norm_1(x1 + x)
+        x3 = self.lin1(x2)
+        x4 = self.relu(x3)
+        x5 = self.lin2(x4)
+        x6 = self.add_and_norm_2(x3 + x5)
+        x7 = self.dropout(x6)
+        x = self.lin3(x7)
+        return x
 
 
 class TransformerDecoderLayer(nn.Module):
@@ -194,10 +215,10 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # 3. Create a dropout layer
         # YOUR CODE STARTS HERE (our implementation is about 5 lines)
 
-        self.encoder_embeddings = nn.Embedding(num_embeddings=src_vocab_size)
-        self.decoder_embeddings = nn.Embedding(num_embeddings=tgt_vocab_size)
-        self.positional = nn.Embedding(num_embeddings=tgt_vocab_size)
-        self.out_proj = nn.Linear(fcn_hidden, tgt_vocab_size)
+        self.encoder_embeddings = nn.Embedding(num_embeddings=src_vocab_size, embedding_dim=hidden)  # ZONA tgt_vocab_size
+        self.decoder_embeddings = nn.Embedding(num_embeddings=tgt_vocab_size, embedding_dim=hidden)  # ZONA tgt_vocab_size
+        self.positional_emb = nn.Embedding(num_embeddings=hidden, embedding_dim=hidden)
+        self.out_proj = nn.Linear(hidden, tgt_vocab_size)
         self.dropout = nn.Dropout(p=dropout)
 
         # YOUR CODE ENDS HERE
@@ -215,15 +236,16 @@ class TransfomerEncoderDecoderModel(nn.Module):
         #
         # YOUR CODE STARTS HERE (our implementation is 3-6 lines)
 
-        self.encoder_layers = nn.ModuleList([TransformerEncoderLayer(hidden,
-                                                                     num_heads,
-                                                                     fcn_hidden,
-                                                                     dropout=0.0,
+        self.encoder_layers = nn.ModuleList([TransformerEncoderLayer(hidden=hidden,
+                                                                     num_heads=num_heads,
+                                                                     fcn_hidden=fcn_hidden,
+                                                                     dropout=dropout,
                                                                      causal=False) for _ in range(num_layers)])
-        self.decoder_layers = nn.ModuleList([TransformerDecoderLayer(hidden,
-                                                                     num_heads,
-                                                                     fcn_hidden,
-                                                                     dropout=0.0) for _ in range(num_layers)])
+
+        self.decoder_layers = nn.ModuleList([TransformerDecoderLayer(hidden=hidden,
+                                                                     num_heads=num_heads,
+                                                                     fcn_hidden=fcn_hidden,
+                                                                     dropout=dropout) for _ in range(num_layers)])
         # YOUR CODE ENDS HERE
 
     def _add_positions(self, sequence_tensor):
@@ -290,9 +312,10 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # YOUR CODE STARTS HERE
 
         source_embeddings = self.encoder_embeddings(input_ids)
-        source_embeddings = self._add_positions(source_embeddings)
-        encoder_hidden_states = [layer(x=source_embeddings,
-                                       key_padding_mask=key_padding_mask) for layer in self.encoder_layers]
+        encoder_hidden_states = self._add_positions(source_embeddings)
+        for layer in self.encoder_layers:
+            encoder_hidden_states = layer(x=encoder_hidden_states,
+                                          key_padding_mask=key_padding_mask)
 
         # YOUR CODE ENDS HERE
 
@@ -309,10 +332,11 @@ class TransfomerEncoderDecoderModel(nn.Module):
         # YOUR CODE STARTS HERE
 
         decoder_embeddings = self.decoder_embeddings(decoder_input_ids)
-        decoder_embeddings = self._add_positions(decoder_embeddings)
-        decoder_hidden_states = [layer(decoder_hidden_states=decoder_embeddings,
-                                       encoder_hidden_states=encoder_hidden_states,
-                                       key_padding_mask=key_padding_mask) for layer in self.decoder_layers]
+        decoder_hidden_states = self._add_positions(decoder_embeddings)
+        for layer in self.decoder_layers:
+            decoder_hidden_states = layer(decoder_hidden_states=decoder_hidden_states,
+                                          encoder_hidden_states=encoder_hidden_states,
+                                          key_padding_mask=key_padding_mask)
         logits = self.out_proj(decoder_hidden_states)
         ## YOUR CODE ENDS HERE
         return logits
