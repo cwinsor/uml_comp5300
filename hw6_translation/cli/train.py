@@ -140,11 +140,11 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if f"{args.source_lang}_tokenizer" not in os.listdir(args.output_dir):
-        raise ValueError(f"The source tokenizer is not found in {args.output_dir}")
+    # if f"{args.source_lang}_tokenizer" not in os.listdir(args.output_dir):
+    #     raise ValueError(f"The source tokenizer is not found in {args.output_dir}")
     
-    if f"{args.target_lang}_tokenizer" not in os.listdir(args.output_dir):
-        raise ValueError(f"The target tokenizer is not found in {args.output_dir}")
+    # if f"{args.target_lang}_tokenizer" not in os.listdir(args.output_dir):
+    #     raise ValueError(f"The target tokenizer is not found in {args.output_dir}")
 
     return args
 
@@ -249,6 +249,9 @@ def evaluate_model(
             # Do we need to have decoder_input_ids in the .forward() call? In .generate() call?
             # YOUR ANSWER HERE (please limit your answer to 1-2 sentences):
             #
+            # A: forward performs a single inference (word)
+            # generate performs forward repeatedly to generate a sequence of words
+            #
             generated_tokens = model.generate(
                 input_ids,
                 bos_token_id=target_tokenizer.bos_token_id,
@@ -316,7 +319,9 @@ def main():
     # Our implementation is two lines.
     # YOUR CODE STARTS HERE
 
-    source_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(src_tokenizer_path)
+    foo = "dbmdz/bert-base-german-cased"
+
+    source_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(foo)
     target_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(tgt_tokenizer_path)
     # YOUR CODE ENDS HERE
 
@@ -460,10 +465,25 @@ def main():
             # Task 6.1: implement training step: forward, loss, backward, step
             # YOUR CODE STARTS HERE
 
-            assert False, "code me !!!"
-            # labels =
-            # logits =
-            # loss =
+            input_ids = batch["input_ids"].to(args.device)
+            decoder_input_ids = batch["decoder_input_ids"].to(args.device)
+            key_padding_mask = batch["key_padding_mask"].to(args.device)
+            labels = batch["labels"].to(args.device)
+
+            logits = model(input_ids,
+                           decoder_input_ids=decoder_input_ids,
+                           key_padding_mask=key_padding_mask
+                           )
+            
+            loss = F.cross_entropy(logits.view(-1, logits.shape[-1]),
+                                   labels.view[-1],
+                                   ignore_index=target_tokenizer.pad_token_id
+                                   )
+            
+            loss.backward()
+            optimizer.step()
+            lr_scheduler.step()
+            optimizer.zero_grad()
 
             # YOUR CODE ENDS HERE
 
