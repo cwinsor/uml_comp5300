@@ -316,8 +316,6 @@ def main():
     # Our implementation is two lines.
     # YOUR CODE STARTS HERE
 
-    source_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(src_tokenizer_path)
-    target_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(tgt_tokenizer_path)
     # YOUR CODE ENDS HERE
 
     # Task 4.2: Create TransformerEncoderDecoder object
@@ -325,15 +323,6 @@ def main():
     # Move model to the device we use for training
     # YOUR CODE STARTS HERE
 
-    model = TransfomerEncoderDecoderModel(num_layers=args.num_layers,
-                                          hidden=args.hidden,
-                                          num_heads=args.num_heads,
-                                          fcn_hidden=args.fcn_hidden,
-                                          max_seq_len=args.max_seq_len,
-                                          src_vocab_size="ZONA",
-                                          tgt_vocab_size="ZONA",
-                                          dropout=args.dropout_rate)
-    model.to(args.device)
     # YOUR CODE ENDS HERE
 
     ###############################################################################
@@ -397,17 +386,6 @@ def main():
     # (readability matters)
     # YOUR CODE STARTS HERE
 
-    train_dataloader = DataLoader(train_dataset,
-                                  batch_size=args.batch_size,
-                                  num_workers=args.num_workers,
-                                  collate_fn=collation_function_for_seq2seq_wrapped,
-                                  shuffle=True)
-    
-    eval_dataloader = DataLoader(eval_dataset,
-                                 batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
-                                 collate_fn=collation_function_for_seq2seq_wrapped,
-                                 shuffle=False)
     # YOUR CODE ENDS HERE
 
     ###############################################################################
@@ -460,10 +438,9 @@ def main():
             # Task 6.1: implement training step: forward, loss, backward, step
             # YOUR CODE STARTS HERE
 
-            assert False, "code me !!!"
-            # labels =
-            # logits =
-            # loss =
+            labels =
+            logits =
+            loss =
 
             # YOUR CODE ENDS HERE
 
