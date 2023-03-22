@@ -1,0 +1,54 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "create_tokenizer",
+            "type": "python",
+            "request": "launch",
+            "program": "cli/create_tokenizer.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--dataset_name", "stas/wmt14-en-de-pre-processed",
+                "--dataset_config_name", "ende",
+                "--source_lang", "en",
+                "--target_lang", "de",
+                "--vocab_size", "30000",
+                "--save_dir", "../output_dir",
+            ]
+        },
+
+        {
+            "name": "train_e_g_DEBUG",
+            "type": "python",
+            "request": "launch",
+            "program": "cli/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--debug",
+                "--source_lang", "en",
+                "--target_lang", "de",
+                "--dataset_config_name", "ende",
+                "--output_dir", "../output_dir",
+                "--weight_decay", "0.01",
+                "--device", "cuda",
+                "--batch_size", "8",
+                "--learning_rate", "1e-5",
+                "--num_warmup_steps", "5",
+            ]
+        },
+
+    ]
+}

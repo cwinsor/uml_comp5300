@@ -319,9 +319,7 @@ def main():
     # Our implementation is two lines.
     # YOUR CODE STARTS HERE
 
-    foo = "dbmdz/bert-base-german-cased"
-
-    source_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(foo)
+    source_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(src_tokenizer_path)
     target_tokenizer = transformers.PreTrainedTokenizerFast.from_pretrained(tgt_tokenizer_path)
     # YOUR CODE ENDS HERE
 
@@ -331,12 +329,12 @@ def main():
     # YOUR CODE STARTS HERE
 
     model = TransfomerEncoderDecoderModel(num_layers=args.num_layers,
-                                          hidden=args.hidden,
+                                          hidden=args.hidden_size,
                                           num_heads=args.num_heads,
                                           fcn_hidden=args.fcn_hidden,
-                                          max_seq_len=args.max_seq_len,
-                                          src_vocab_size="ZONA",
-                                          tgt_vocab_size="ZONA",
+                                          max_seq_len=args.max_seq_length,
+                                          src_vocab_size=30000,  # ZONA question here - parameterized?
+                                          tgt_vocab_size=30000,
                                           dropout=args.dropout_rate)
     model.to(args.device)
     # YOUR CODE ENDS HERE
@@ -402,15 +400,16 @@ def main():
     # (readability matters)
     # YOUR CODE STARTS HERE
 
+    DATALOAD_NUM_WORKERS = 3
     train_dataloader = DataLoader(train_dataset,
                                   batch_size=args.batch_size,
-                                  num_workers=args.num_workers,
+                                  num_workers=DATALOAD_NUM_WORKERS,  # ZONA - question here no runtime arg... ?
                                   collate_fn=collation_function_for_seq2seq_wrapped,
                                   shuffle=True)
     
     eval_dataloader = DataLoader(eval_dataset,
                                  batch_size=args.batch_size,
-                                 num_workers=args.num_workers,
+                                 num_workers=DATALOAD_NUM_WORKERS, 
                                  collate_fn=collation_function_for_seq2seq_wrapped,
                                  shuffle=False)
     # YOUR CODE ENDS HERE
@@ -467,7 +466,7 @@ def main():
 
             input_ids = batch["input_ids"].to(args.device)
             decoder_input_ids = batch["decoder_input_ids"].to(args.device)
-            key_padding_mask = batch["key_padding_mask"].to(args.device)
+            key_padding_mask = batch["encoder_padding_mask"].to(args.device)
             labels = batch["labels"].to(args.device)
 
             logits = model(input_ids,
