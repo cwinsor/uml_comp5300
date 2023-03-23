@@ -49,6 +49,24 @@
                 "--num_warmup_steps", "5",
             ]
         },
-
+        {
+            "name": "train_e_g_FULL",
+            "type": "python",
+            "request": "launch",
+            "program": "cli/train.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args": [
+                "--source_lang", "en",
+                "--target_lang", "de",
+                "--dataset_config_name", "ende",
+                "--output_dir", "output_dir",
+                "--weight_decay", "0.01",
+                "--device", "cuda",
+                "--batch_size", "32",
+                "--learning_rate", "1e-4",
+                "--num_warmup_steps", "5",
+            ]
+        },
     ]
 }

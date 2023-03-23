@@ -551,7 +551,7 @@ def main():
     model.save_pretrained(args.output_dir)
 
     logger.info("Uploading tokenizer, model and config to wandb")
-    wandb.save(os.path.join(args.output_dir, "*"))
+    # wandb.save(os.path.join(args.output_dir, "*"))
 
     logger.info(f"Script finished succesfully, model saved in {args.output_dir}")
 
