@@ -1,0 +1,81 @@
+
+
+14: BERT and Transfer Learning
+https://docs.google.com/presentation/d/1ou0UZ_9_AkRhXOhzIA7v8Sxx2g8MnHEr_taePF_Fvwk/edit#slide=id.p
+Transfer learning
+Structuring input text for transformers
+Masked language modeling
+
+
+NLP 5. Neural Networks 101
+https://docs.google.com/presentation/d/1yGy4j22QhUh_H6_YhuNdlILxbqSeNqpW8YDnNDQg-N4/edit#slide=id.p
+Fully-connected neural networks
+Activation functions
+Activation function roles
+Stochastic gradient descent
+Backpropagation
+
+
+
+
+2:
+
+Transfer learning
+Structuring input text for transformers
+Masked language modeling
+
+https://docs.google.com/presentation/d/1ou0UZ_9_AkRhXOhzIA7v8Sxx2g8MnHEr_taePF_Fvwk/edit#slide=id.g10d1d826da1_0_61
+
+
+10: Language Models, Transformer Intro
+https://docs.google.com/presentation/d/1583fQNYaE_t0Nk24E2vTZrDCDRHrKefUSVf0H8W5owU/edit#slide=id.p
+Attention, KQV notation
+Language modeling
+Transformer Encoder
+AND NOTES:
+https://docs.google.com/document/d/1091-M9THl6U5sbs16M_K4d2JRYSmtYFe51Vdgfn-Rnw/edit?usp=sharing
+
+9: Momentum and ADAM optimizers
+Batch Normalization
+Dropout
+Neural networks are hard to train
+https://docs.google.com/presentation/d/1ETedhrEATZlsV3d9op4pxuXk9KWAcvMrQHQ_VtxNBqw/edit#slide=id.p
+
+
+https://docs.google.com/presentation/d/1qJAT0fDXADTCfGCGVyaEVEpfumlhYua3lKHdv6fDvNM/edit#slide=id.p
+
+5.
+Activation Functions and NN Initialization
+Don’t worry about activations too much but don’t use sigmoid unless you have reasons to
+ReLU is the default choice
+Weight initialization matters
+ADAM optimizer
+Batch Normalization
+Dropout
+Neural networks are hard to train
+https://docs.google.com/presentation/d/1yEZEEXhq6wkJ_I27dQl-zlajgXOWs9DVAiptUx1BFTo/edit#slide=id.g112ed90aa6d_0_396
+
+Backpropegation in depth
+https://docs.google.com/presentation/d/1udp4keW7nMRbk1qxSNN7iZOTHcuogT6i0RAFr6Lw1u0
+Backpropagation
+General definition of a neural network
+also:
+http://cs231n.stanford.edu/handouts/derivatives.pdf
+http://cs231n.stanford.edu/handouts/linear-backprop.pdf (linear layer)
+
+
+
+Momentum and ADAM optimizers
+Batch Normalization
+Dropout
+Neural networks are hard to train
+
+
+
+
+
+https://docs.google.com/presentation/d/1yEZEEXhq6wkJ_I27dQl-zlajgXOWs9DVAiptUx1BFTo/edit#slide=id.p
+
+
+
+
